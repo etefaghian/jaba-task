@@ -16,6 +16,9 @@ export class User {
 
   @Prop()
   lastName: string;
+
+  @Prop()
+  hasCompleteRegister: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

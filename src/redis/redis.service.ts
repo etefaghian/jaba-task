@@ -1,17 +1,31 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import * as redis from 'redis';
+import { RedisDbType } from './types/redisType';
 
 @Injectable()
 export class RedisService {
-  public pub: any;
+  public codeConnection;
+  public tokenConnection;
   constructor(private configService: ConfigService) {
-    const connection = redis.createClient({
+    this.codeConnection = redis.createClient({
       url: this.configService.get('REDIS_URL'),
+      database: RedisDbType.code,
     });
-    this.pub = connection;
-    connection.connect();
-    connection.on('error', (e) => console.log('redis connection error:', e));
+
+    this.tokenConnection = redis.createClient({
+      url: this.configService.get('REDIS_URL'),
+      database: RedisDbType.token,
+    });
+    this.tokenConnection.connect();
+    this.tokenConnection.on('error', (e) =>
+      console.log('redis connection error:', e),
+    );
+
+    this.codeConnection.connect();
+    this.codeConnection.on('error', (e) =>
+      console.log('redis connection error:', e),
+    );
   }
 
   async setSmsCode(code: string, email: string) {
