@@ -1,4 +1,5 @@
-import { Controller, Body, Post } from '@nestjs/common';
+import { Controller, Body, Post, UseGuards } from '@nestjs/common';
+import { AuthGuard, ShouldRegisterBeComplete } from 'utils/guards/auth.guard';
 import { CompleteRegisterDto } from './dto/completeRegister.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestLoginDto } from './dto/requestLogin.dto';
@@ -21,6 +22,8 @@ export class UserController {
   }
 
   @Post('/completeRegister')
+  @UseGuards(AuthGuard)
+  @ShouldRegisterBeComplete(false)
   async completeRegister(
     @Body() completeRegisterDto: CompleteRegisterDto,
   ): Promise<any> {

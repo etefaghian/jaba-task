@@ -74,10 +74,22 @@ export class UserService {
     this.redisService.deleteSmsCode(loginDto.email);
     //set token validity in redis
     this.redisService.setUserValidity(accessToken, true);
-    //checks user is new or not
 
     //return result
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, isUserNew };
   }
-  async completeRegister(completeRegisterDto: CompleteRegisterDto) {}
+  async completeRegister(completeRegisterDto: CompleteRegisterDto) {
+    this.authService.verifyJwt('');
+    //find user from database
+    const user = await this.userRepository.findOneByEmail(completeRegisterDto);
+    const isUserNew = user ? false : true;
+
+    //create a user if user is new
+    if (isUserNew) {
+      user = await this.userRepository.createIncompleteUser({
+        email: loginDto.email,
+        hasCompleteRegister: false,
+      });
+    }
+  }
 }
