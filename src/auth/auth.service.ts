@@ -32,6 +32,7 @@ export interface UserJwtData {
   fnm: string;
   lnm: string;
   typ: JwtTokenType;
+  new: boolean;
 }
 
 export type JwtTokenType = 'access' | 'refresh';

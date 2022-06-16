@@ -6,6 +6,7 @@ import { generateRandomNumber } from 'utils/generateRandomNumber';
 import { CompleteRegisterDto } from './dto/completeRegister.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestLoginDto } from './dto/requestLogin.dto';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
@@ -13,7 +14,8 @@ export class UserService {
     private emailService: EmailService,
     private redisService: RedisService,
     private authService: AuthService,
-  ) {} // private repository: ExerciseInstructionRepository,
+    private userRepository: UserRepository,
+  ) {}
   async requestLogin(requestLoginDto: RequestLoginDto) {
     //construct a random string
     const randomNumber = generateRandomNumber(5);
@@ -30,21 +32,32 @@ export class UserService {
     return { ok: true };
   }
   async login(loginDto: LoginDto) {
-    //find user from database
     //checks codes is equal or not
     const code = await this.redisService.getSmsCode(loginDto.email);
     if (code !== loginDto.code) {
       throw new Error('token is not equal');
+    }
+    //find user from database
+    let user = await this.userRepository.findOneByEmail(loginDto.email);
+    const isUserNew = user ? false : true;
+
+    //create a user if user is new
+    if (isUserNew) {
+      user = await this.userRepository.createIncompleteUser({
+        email: loginDto.email,
+        hasCompleteRegister: false,
+      });
     }
 
     //generate access and refresh token
     const accessToken = this.authService.constructJwt({
       ver: 1,
       typ: 'access',
-      lnm: 'from db',
-      fnm: 'from db',
-      eml: loginDto.email,
-      uid: '',
+      lnm: user.lastName,
+      fnm: user.firstName,
+      eml: user.email,
+      uid: user._id.toString(),
+      new: isUserNew,
     });
 
     const refreshToken = this.authService.constructJwt({
@@ -54,7 +67,9 @@ export class UserService {
       fnm: 'from db',
       eml: loginDto.email,
       uid: '',
+      new: isUserNew,
     });
+
     //delete redis record
     this.redisService.deleteSmsCode(loginDto.email);
     //set token validity in redis

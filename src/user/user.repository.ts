@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { CreateInCompleteUserDto } from './dto/createInCompleteUser.dto';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './user.model';
 
@@ -12,6 +13,10 @@ export class UserRepository {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+    return await this.userModel.create(createUserDto);
+  }
+
+  async createIncompleteUser(createUserDto: CreateInCompleteUserDto) {
     return await this.userModel.create(createUserDto);
   }
 
