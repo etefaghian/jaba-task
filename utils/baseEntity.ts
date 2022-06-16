@@ -10,4 +10,7 @@ export class BaseEntity {
 
   @Prop(Date)
   updatedAt: Date;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
