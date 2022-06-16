@@ -3,7 +3,7 @@ import { ObjectId } from 'mongoose';
 
 export class BaseEntity {
   @Prop()
-  _id: ObjectId;
+  _id: string;
 
   @Prop(Date)
   createdAt: Date;
