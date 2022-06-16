@@ -10,6 +10,8 @@ import { RedisModule } from './redis/redis.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { AuthModule } from './auth/auth.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { GlobalResponseInterceptor } from 'utils/interceptors/responseInterceptor';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { AuthModule } from './auth/auth.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const options = {
-          uri: 'mongodb://localhost:27017',
+          uri: 'mongodb://localhost:27017/jabama',
           auth: undefined,
         };
         if (configService.get('DATABASE_USER')) {
@@ -45,6 +47,12 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: GlobalResponseInterceptor,
+    },
+  ],
 })
 export class AppModule {}

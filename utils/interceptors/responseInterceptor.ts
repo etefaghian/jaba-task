@@ -4,15 +4,26 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { LogService } from 'src/log/log.service';
 
 @Injectable()
-export class ShapeKarafsResponseInterceptor implements NestInterceptor {
+export class GlobalResponseInterceptor implements NestInterceptor {
+  constructor(private logService: LogService) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    //add log
+    const req = context.switchToHttp().getRequest();
+    const res: Response = context.switchToHttp().getResponse();
+
+    this.logService.createHttpLog({
+      data: {
+        req: { body: req.body, header: req.headers },
+        res: { header: res.getHeaders() },
+      },
+    });
+
     return next.handle().pipe(
-      //map raw response to karafs response
       map((data): any => ({
         result: data,
         status: 200,
