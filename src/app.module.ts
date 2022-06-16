@@ -8,6 +8,8 @@ import { CodeModule } from './code/code.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RedisModule } from './redis/redis.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bull';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -16,24 +18,31 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     EmailModule,
     CodeModule,
     RedisModule,
-
+    BullModule.forRoot({
+      prefix: 'jabama',
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const options = {
-          uri: configService.get<string>('DATABASE_URI'),
+          uri: 'mongodb://localhost:27017',
           auth: undefined,
         };
         if (configService.get('DATABASE_USER')) {
-          options.auth = {
-            username: configService.get('DATABASE_USER'),
-            password: configService.get('DATABASE_PASSWORD'),
-          };
+          // options.auth = {
+          //   username: configService.get('DATABASE_USER'),
+          //   password: configService.get('DATABASE_PASSWORD'),
+          // };
         }
         return options;
       },
       inject: [ConfigService],
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
