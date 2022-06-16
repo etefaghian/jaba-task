@@ -63,10 +63,10 @@ export class UserService {
     const refreshToken = this.authService.constructJwt({
       ver: 1,
       typ: 'access',
-      lnm: 'from db',
-      fnm: 'from db',
-      eml: loginDto.email,
-      uid: '',
+      lnm: user.lastName,
+      fnm: user.firstName,
+      eml: user.email,
+      uid: user._id.toString(),
       new: isUserNew,
     });
 
