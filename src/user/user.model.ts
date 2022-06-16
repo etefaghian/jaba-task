@@ -4,7 +4,7 @@ import { BaseEntity } from 'utils/baseEntity';
 
 export type UserDocument = User & Document;
 
-@Schema()
+@Schema({ timestamps: {} })
 export class User extends BaseEntity {
   @Prop()
   name: string;

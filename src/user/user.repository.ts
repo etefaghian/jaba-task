@@ -17,7 +17,10 @@ export class UserRepository {
   }
 
   async createIncompleteUser(createUserDto: CreateInCompleteUserDto) {
-    return await this.userModel.create(createUserDto);
+    return await this.userModel.create({
+      ...createUserDto,
+      hasCompleteRegister: false,
+    });
   }
 
   async findOneByEmail(email: string) {
@@ -29,12 +32,15 @@ export class UserRepository {
   }
 
   async findOneById(id: string) {
-    return await this.userModel.find({
-      _id: id,
-    });
+    return (
+      (await this.userModel.find({
+        _id: id,
+      })) ?? null
+    );
   }
 
   async deleteOne(id: string) {
     await this.userModel.updateOne({ _id: id }, { isDeleted: true });
+    return true;
   }
 }
