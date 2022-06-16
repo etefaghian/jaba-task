@@ -1,23 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document, SchemaTypes } from 'mongoose';
 
 export type LogDocument = Log & Document;
-enum LogType {
+export enum LogType {
   email = 'email',
+  redis = 'redis',
+  auth = 'auth',
 }
 
-enum LogSource {
+export enum LogSource {
   http = 'http',
   manual = 'manual',
 }
 
 @Schema()
 export class Log {
-  @Prop()
+  @Prop({ type: SchemaTypes.Mixed })
   data: any;
 
   @Prop({ enum: LogType })
-  type: LogType;
+  type?: LogType;
 
   @Prop({ enum: LogSource })
   source: LogSource;
