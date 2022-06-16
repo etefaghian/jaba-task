@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
@@ -12,6 +12,7 @@ import { BullModule } from '@nestjs/bull';
 import { AuthModule } from './auth/auth.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalResponseInterceptor } from 'utils/interceptors/responseInterceptor';
+import { LoggerMiddleware } from 'utils/middlewares/logerMiddleware';
 
 @Module({
   imports: [
@@ -55,4 +56,8 @@ import { GlobalResponseInterceptor } from 'utils/interceptors/responseIntercepto
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
