@@ -16,9 +16,13 @@ export class UserRepository {
     id: string,
     updateUserDto: UpdateInCompleteUserDto,
   ) {
-    return await this.userModel.findOneAndUpdate({ _id: id }, updateUserDto, {
-      new: true,
-    });
+    return await this.userModel.findOneAndUpdate(
+      { _id: id },
+      { ...updateUserDto, hasCompleteRegister: true },
+      {
+        new: true,
+      },
+    );
   }
 
   async createIncompleteUser(createUserDto: CreateInCompleteUserDto) {

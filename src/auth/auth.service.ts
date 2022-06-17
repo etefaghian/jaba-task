@@ -4,8 +4,12 @@ import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class AuthService {
   verifyJwt(token: string): UserJwtData {
-    const data = jwt.verify(token, secret);
-    return JSON.parse(data as string);
+    const data: UserJwtData = jwt.verify(token, secret) as any;
+
+    if (data.typ !== 'access') {
+      throw new Error('type of token is not correct ');
+    }
+    return data;
   }
 
   constructJwt(data: UserJwtData) {
