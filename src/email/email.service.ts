@@ -2,12 +2,15 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { Job, Queue } from 'bull';
+import { LogType } from 'src/log/log.model';
+import { LogService } from 'src/log/log.service';
 import { AddConfirmationEmailToQueueDto } from './dto/addConfirmationEmailToQueue.dto';
 
 @Injectable()
 @Processor('email_send')
 export class EmailService {
   constructor(
+    private logService: LogService,
     private mailerService: MailerService,
     @InjectQueue('email_send')
     private emailSendQueue: Queue<EmailSendQueueType>,
@@ -15,12 +18,21 @@ export class EmailService {
 
   /**
    * @method
-   * add cofiramtion email to queue for future sending
+   * add confirmation email to queue for future sending
    * @param addConfirmationEmailToQueueDto
    */
   async addConfirmationEmailToQueue(
     addConfirmationEmailToQueueDto: AddConfirmationEmailToQueueDto,
   ) {
+    this.logService.createManualLog({
+      type: LogType.email,
+      data: {
+        message: 'add_email_to_queue',
+        email: addConfirmationEmailToQueueDto.email,
+        code: addConfirmationEmailToQueueDto.code,
+        status: 'pending',
+      },
+    });
     await this.emailSendQueue.add({
       email: addConfirmationEmailToQueueDto.email,
       code: addConfirmationEmailToQueueDto.code,
@@ -36,6 +48,7 @@ export class EmailService {
   private async sendEmailFromQueue(job: Job<EmailSendQueueType>) {
     const { email, code } = job.data;
     this.mailerService
+
       .sendMail({
         to: email,
         subject: 'تایید ایمیل شما',
@@ -43,6 +56,17 @@ export class EmailService {
       })
       .catch((e) => {
         console.log(e);
+      })
+      .then(() => {
+        this.logService.createManualLog({
+          type: LogType.email,
+          data: {
+            message: 'send_email',
+            email,
+            code,
+            status: 'success',
+          },
+        });
       });
   }
 

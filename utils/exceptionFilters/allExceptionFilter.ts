@@ -44,7 +44,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : //shape unhandled exception
           {
             message: 'INTERNAL_SERVER_ERROR',
-            description: 'مشکل مدیریت نشده ای در سرور رخ داده است',
+            text: 'مشکل مدیریت نشده ای در سرور رخ داده است',
           };
 
     //construct response body with status and message and description
