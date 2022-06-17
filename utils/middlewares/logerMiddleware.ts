@@ -2,6 +2,10 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { LogService } from 'src/log/log.service';
 
+/**
+ * @class
+ * add a middleware for capture http info for logging in logger service
+ */
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
   constructor(private logService: LogService) {}
