@@ -10,9 +10,10 @@ import { RedisModule } from './redis/redis.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { AuthModule } from './auth/auth.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalResponseInterceptor } from 'utils/interceptors/responseInterceptor';
 import { LoggerMiddleware } from 'utils/middlewares/logerMiddleware';
+import { AllExceptionsFilter } from 'utils/exceptionFilters/allExceptionFilter';
 
 @Module({
   imports: [
@@ -62,6 +63,10 @@ import { LoggerMiddleware } from 'utils/middlewares/logerMiddleware';
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalResponseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })
