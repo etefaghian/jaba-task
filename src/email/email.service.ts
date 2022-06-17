@@ -13,33 +13,52 @@ export class EmailService {
     private emailSendQueue: Queue<EmailSendQueueType>,
   ) {}
 
+  /**
+   * @method
+   * add cofiramtion email to queue for future sending
+   * @param addConfirmationEmailToQueueDto
+   */
   async addConfirmationEmailToQueue(
     addConfirmationEmailToQueueDto: AddConfirmationEmailToQueueDto,
   ) {
-    const job = await this.emailSendQueue.add({
+    await this.emailSendQueue.add({
       email: addConfirmationEmailToQueueDto.email,
       code: addConfirmationEmailToQueueDto.code,
       status: 'pending',
     });
   }
 
+  /**
+   * @method
+   * send email from queue to receiver
+   */
   @Process()
-  async sendEmailFromQueue(job: Job<EmailSendQueueType>) {
+  private async sendEmailFromQueue(job: Job<EmailSendQueueType>) {
     const { email, code } = job.data;
     this.mailerService
       .sendMail({
         to: email,
-        // from: '"Support Team" <support@example.com>', // override default from
         subject: 'تایید ایمیل شما',
-        text: code,
-        // template: './confirmation',
-        // context: {
-        //   code,
-        // },
+        text: this.constructMailText(code),
       })
       .catch((e) => {
         console.log(e);
       });
+  }
+
+  /**
+   * @method
+   * generate content of confirmation email
+   * @param code
+   * @returns
+   */
+  constructMailText(code: string) {
+    return `با سلام
+    کد تایید ایمیل شما :
+  ${code}
+    در صورتی که از این ایمیل چیزی نمیفهمید آن را نادیده بگیرید
+    
+    `;
   }
 }
 

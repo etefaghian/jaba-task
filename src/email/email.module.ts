@@ -3,34 +3,33 @@ import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { join } from 'path';
 import { BullModule } from '@nestjs/bull';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'email_send',
     }),
-    MailerModule.forRoot({
-      // transport: 'smtps://user@example.com:topsecret@smtp.example.com',
-      // or
-      transport: {
-        host: 'smtp.gmail.com',
-        port: 465,
-        ignoreTLS: true,
-        secure: true,
-        auth: {
-          user: 'etefagh3232@gmail.com',
-          pass: 'bygtpjgtmroglrat',
-        },
+    MailerModule.forRootAsync({
+      imports: [ConfigService],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          transport: {
+            host: configService.getOrThrow('SMTP_HOST'),
+            port: configService.getOrThrow('SMTP_PORT'),
+            ignoreTLS: true,
+            secure: true,
+            auth: {
+              user: configService.getOrThrow('SMTP_USERNAME'),
+              pass: configService.getOrThrow('SMTP_PASSWORD'),
+            },
+          },
+          defaults: {
+            from: configService.getOrThrow('SMTP_USERNAME'),
+          },
+        };
       },
-      defaults: {
-        from: 'etefagh3232@gmail.com',
-      },
-      // template: {
-      //   dir: process.cwd() + '/templates/',jjj
-      //   options: {
-      //     strict: true,
-      //   },
-      // },
     }),
   ],
   providers: [EmailService],
