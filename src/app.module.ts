@@ -16,30 +16,39 @@ import { LoggerMiddleware } from 'utils/middlewares/logerMiddleware';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     UserModule,
     LogModule,
     EmailModule,
     CodeModule,
     RedisModule,
-    BullModule.forRoot({
-      prefix: 'jabama',
-      redis: {
-        host: 'localhost',
-        port: 6379,
+
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          prefix: configService.getOrThrow('QUEUE_NAME'),
+          redis: {
+            host: configService.getOrThrow('REDIS_HOST'),
+            port: configService.getOrThrow('REDIS_PORT'),
+          },
+        };
       },
+      inject: [ConfigService],
     }),
+
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const options = {
-          uri: 'mongodb://localhost:27017/jabama',
+          uri: configService.getOrThrow('DATABASE_URL'),
           auth: undefined,
         };
         if (configService.get('DATABASE_USER')) {
-          // options.auth = {
-          //   username: configService.get('DATABASE_USER'),
-          //   password: configService.get('DATABASE_PASSWORD'),
-          // };
+          options.auth = {
+            username: configService.get('DATABASE_USER'),
+            password: configService.get('DATABASE_PASSWORD'),
+          };
         }
         return options;
       },

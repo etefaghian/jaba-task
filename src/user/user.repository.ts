@@ -39,7 +39,6 @@ export class UserRepository {
 
     return user ?? null;
   }
-
   async findOneById(id: string): Promise<User | null> {
     return (
       (await this.userModel.findOne({
