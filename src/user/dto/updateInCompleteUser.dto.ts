@@ -1,6 +1,6 @@
 import { IsString } from 'class-validator';
 
-export class CompleteRegisterDto {
+export class UpdateInCompleteUserDto {
   @IsString()
   firstName: string;
 

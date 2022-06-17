@@ -3,9 +3,9 @@ import { AuthService } from 'src/auth/auth.service';
 import { EmailService } from 'src/email/email.service';
 import { RedisService } from 'src/redis/redis.service';
 import { generateRandomNumber } from 'utils/generateRandomNumber';
-import { CompleteRegisterDto } from './dto/completeRegister.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestLoginDto } from './dto/requestLogin.dto';
+import { UpdateInCompleteUserDto } from './dto/updateInCompleteUser.dto';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -78,18 +78,23 @@ export class UserService {
     //return result
     return { accessToken, refreshToken, isUserNew };
   }
-  async completeRegister(completeRegisterDto: CompleteRegisterDto) {
-    this.authService.verifyJwt('');
+  async completeRegister(
+    userId: string,
+    updateUserDto: UpdateInCompleteUserDto,
+  ) {
     //find user from database
-    const user = await this.userRepository.findOneByEmail(completeRegisterDto);
-    const isUserNew = user ? false : true;
+    const user = await this.userRepository.findOneById(userId);
 
-    //create a user if user is new
-    if (isUserNew) {
-      user = await this.userRepository.createIncompleteUser({
-        email: loginDto.email,
-        hasCompleteRegister: false,
-      });
+    //check user exists or not
+    if (!user) {
+      throw new Error('user not found');
     }
+
+    //update user according to _id of user
+    const updatedUser = await this.userRepository.updateInCompleteRegister(
+      user._id.toString(),
+      updateUserDto,
+    );
+    return updatedUser;
   }
 }

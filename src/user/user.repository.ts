@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateInCompleteUserDto } from './dto/createInCompleteUser.dto';
-import { CreateUserDto } from './dto/createUser.dto';
+import { UpdateInCompleteUserDto } from './dto/updateInCompleteUser.dto';
 import { User } from './user.model';
 
 @Injectable()
@@ -12,8 +12,13 @@ export class UserRepository {
     private readonly userModel: Model<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
-    return await this.userModel.create(createUserDto);
+  async updateInCompleteRegister(
+    id: string,
+    updateUserDto: UpdateInCompleteUserDto,
+  ) {
+    return await this.userModel.findOneAndUpdate({ _id: id }, updateUserDto, {
+      new: true,
+    });
   }
 
   async createIncompleteUser(createUserDto: CreateInCompleteUserDto) {
@@ -31,9 +36,9 @@ export class UserRepository {
     return user ?? null;
   }
 
-  async findOneById(id: string) {
+  async findOneById(id: string): Promise<User | null> {
     return (
-      (await this.userModel.find({
+      (await this.userModel.findOne({
         _id: id,
       })) ?? null
     );
