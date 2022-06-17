@@ -29,8 +29,6 @@ export class UserController {
     @User('_id') id: string,
     @Body() updateInCompleteUserDto: UpdateInCompleteUserDto,
   ): Promise<any> {
-    //extract user id from req
-
     const result = await this.userService.completeRegister(
       id,
       updateInCompleteUserDto,
