@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
       name: 'email_send',
     }),
     MailerModule.forRootAsync({
-      imports: [ConfigService],
+      imports: [],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
@@ -36,5 +36,3 @@ import { ConfigService } from '@nestjs/config';
   exports: [EmailService],
 })
 export class EmailModule {}
-
-console.log({ dir: join(__dirname, 'templates') });

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { EmailService } from 'src/email/email.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -35,7 +35,7 @@ export class UserService {
     //checks codes is equal or not
     const code = await this.redisService.getSmsCode(loginDto.email);
     if (code !== loginDto.code) {
-      throw new Error('token is not equal');
+      throw new HttpException('token is not equal', HttpStatus.NOT_FOUND);
     }
     //find user from database
     let user = await this.userRepository.findOneByEmail(loginDto.email);
@@ -71,9 +71,9 @@ export class UserService {
     });
 
     //delete redis record
-    this.redisService.deleteSmsCode(loginDto.email);
+    await this.redisService.deleteSmsCode(loginDto.email);
     //set token validity in redis
-    this.redisService.setUserValidity(accessToken, true);
+    await this.redisService.setUserValidity(accessToken, true);
 
     //return result
     return { accessToken, refreshToken, isUserNew };
@@ -87,7 +87,7 @@ export class UserService {
 
     //check user exists or not
     if (!user) {
-      throw new Error('user not found');
+      throw new HttpException('user not found', HttpStatus.NOT_FOUND);
     }
 
     //update user according to _id of user
@@ -95,6 +95,27 @@ export class UserService {
       user._id.toString(),
       updateUserDto,
     );
-    return updatedUser;
+
+    //construct new jwt according to user update
+    const accessToken = this.authService.constructJwt({
+      ver: 1,
+      typ: 'access',
+      lnm: updatedUser.lastName,
+      fnm: updatedUser.firstName,
+      eml: user.email,
+      uid: user._id.toString(),
+      new: false,
+    });
+
+    const refreshToken = this.authService.constructJwt({
+      ver: 1,
+      typ: 'access',
+      lnm: updatedUser.lastName,
+      fnm: updatedUser.firstName,
+      eml: user.email,
+      uid: user._id.toString(),
+      new: false,
+    });
+    return { user: updatedUser, tokens: { accessToken, refreshToken } };
   }
 }

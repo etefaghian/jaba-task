@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateLogDto } from './dto/createLog.dto';
-import { Log } from './log.model';
 import { LogRepository } from './log.repository';
 
 @Injectable()

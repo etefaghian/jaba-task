@@ -47,7 +47,8 @@ export class RedisService {
 
   async getTokenValidity(token: string): Promise<boolean> {
     const key = constructTokenValidityKey(token);
-    return Boolean(await this.codeConnection.get(key));
+    const value = await this.tokenConnection.get(key);
+    return Boolean(value);
   }
   async deleteSmsCode(email: string) {
     const key = constructSmsCodeKey(email);
