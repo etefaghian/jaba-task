@@ -28,7 +28,7 @@ export class RedisService {
   }
   async setSmsCode(code: string, email: string) {
     const key = constructSmsCodeKey(email);
-    await this.codeConnection.set(key, code, { EX: 1000 * 60 * 60 });
+    await this.codeConnection.set(key, code, { EX: 60 * 60 });
     return true;
   }
   async getSmsCode(email: string): Promise<string> {
@@ -48,7 +48,7 @@ export class RedisService {
   async getTokenValidity(token: string): Promise<boolean> {
     const key = constructTokenValidityKey(token);
     const value = await this.tokenConnection.get(key);
-    return Boolean(value);
+    return value === 'true';
   }
   async deleteSmsCode(email: string) {
     const key = constructSmsCodeKey(email);

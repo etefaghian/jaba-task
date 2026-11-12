@@ -21,7 +21,7 @@ export class UserService {
     const randomNumber = generateRandomNumber(5);
 
     //save random string in in memory db
-    this.redisService.setSmsCode(randomNumber, requestLoginDto.email);
+    await this.redisService.setSmsCode(randomNumber, requestLoginDto.email);
 
     //send email to user according to given email
     await this.emailService.addConfirmationEmailToQueue({
@@ -62,7 +62,7 @@ export class UserService {
 
     const refreshToken = this.authService.constructJwt({
       ver: 1,
-      typ: 'access',
+      typ: 'refresh',
       lnm: user.lastName,
       fnm: user.firstName,
       eml: user.email,
@@ -74,6 +74,13 @@ export class UserService {
     await this.redisService.deleteSmsCode(loginDto.email);
     //set token validity in redis
     await this.redisService.setUserValidity(accessToken, true);
+
+    // A notification is best-effort: email queue outages must not block sign-in.
+    try {
+      await this.emailService.addLoginNotificationToQueue(loginDto.email);
+    } catch (error) {
+      // EmailService records queue failures; the authenticated session remains valid.
+    }
 
     //return result
     return { accessToken, refreshToken, isUserNew };
@@ -109,7 +116,7 @@ export class UserService {
 
     const refreshToken = this.authService.constructJwt({
       ver: 1,
-      typ: 'access',
+      typ: 'refresh',
       lnm: updatedUser.lastName,
       fnm: updatedUser.firstName,
       eml: user.email,
