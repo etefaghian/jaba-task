@@ -75,6 +75,13 @@ export class UserService {
     //set token validity in redis
     await this.redisService.setUserValidity(accessToken, true);
 
+    // A notification is best-effort: email queue outages must not block sign-in.
+    try {
+      await this.emailService.addLoginNotificationToQueue(loginDto.email);
+    } catch (error) {
+      // EmailService records queue failures; the authenticated session remains valid.
+    }
+
     //return result
     return { accessToken, refreshToken, isUserNew };
   }

@@ -45,6 +45,10 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Email notifications
+
+The app emails a one-time verification code when `POST /user/requestLogin` is called and queues a security notification after a successful `POST /user/login`. Login notifications are best-effort, so an email queue outage does not prevent sign-in. Email delivery uses the configured Bull/Redis queue and SMTP transport; set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD` along with the existing Redis settings before running the app.
+
 ## Test
 
 ```bash

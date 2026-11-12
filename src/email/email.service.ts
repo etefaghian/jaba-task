@@ -16,66 +16,105 @@ export class EmailService {
     private emailSendQueue: Queue<EmailSendQueueType>,
   ) {}
 
-  /**
-   * @method
-   * add confirmation email to queue for future sending
-   * @param addConfirmationEmailToQueueDto
-   */
+  /** Add the one-time login code email to the sending queue. */
   async addConfirmationEmailToQueue(
     addConfirmationEmailToQueueDto: AddConfirmationEmailToQueueDto,
   ) {
-    this.logService.createManualLog({
+    const { email, code } = addConfirmationEmailToQueueDto;
+    await this.logService.createManualLog({
       type: LogType.email,
       data: {
         message: 'add_email_to_queue',
-        email: addConfirmationEmailToQueueDto.email,
-        code: addConfirmationEmailToQueueDto.code,
+        email,
         status: 'pending',
       },
     });
     await this.emailSendQueue.add({
-      email: addConfirmationEmailToQueueDto.email,
-      code: addConfirmationEmailToQueueDto.code,
+      type: 'confirmation',
+      email,
+      code,
       status: 'pending',
     });
   }
 
-  /**
-   * @method
-   * send email from queue to receiver
-   */
-  @Process()
-  private async sendEmailFromQueue(job: Job<EmailSendQueueType>) {
-    const { email, code } = job.data;
-    this.mailerService
+  /** Queue a security notice after a user successfully signs in. */
+  async addLoginNotificationToQueue(email: string) {
+    await this.logService.createManualLog({
+      type: LogType.email,
+      data: {
+        message: 'add_login_notification_to_queue',
+        email,
+        status: 'pending',
+      },
+    });
 
-      .sendMail({
-        to: email,
-        subject: 'تایید ایمیل شما',
-        text: this.constructMailText(code),
-      })
-      .catch((e) => {
-        console.log(e);
-      })
-      .then(() => {
-        this.logService.createManualLog({
-          type: LogType.email,
-          data: {
-            message: 'send_email',
-            email,
-            code,
-            status: 'success',
-          },
-        });
+    try {
+      await this.emailSendQueue.add({
+        type: 'login_notification',
+        email,
+        status: 'pending',
       });
+    } catch (error) {
+      await this.logService.createManualLog({
+        type: LogType.email,
+        data: {
+          message: 'queue_login_notification',
+          email,
+          status: 'failed',
+        },
+      });
+      throw error;
+    }
   }
 
-  /**
-   * @method
-   * generate content of confirmation email
-   * @param code
-   * @returns
-   */
+  /** Send queued email jobs. Older confirmation jobs without a type are supported. */
+  @Process()
+  private async sendEmailFromQueue(job: Job<EmailSendQueueType>) {
+    const { email, code, type } = job.data;
+
+    try {
+      await this.mailerService.sendMail(
+        type === 'login_notification'
+          ? {
+              to: email,
+              subject: 'ورود به حساب کاربری شما',
+              text: this.constructLoginNotificationText(),
+            }
+          : {
+              to: email,
+              subject: 'تایید ایمیل شما',
+              text: this.constructMailText(code),
+            },
+      );
+
+      await this.logService.createManualLog({
+        type: LogType.email,
+        data: {
+          message:
+            type === 'login_notification'
+              ? 'send_login_notification'
+              : 'send_email',
+          email,
+          status: 'success',
+        },
+      });
+    } catch (error) {
+      await this.logService.createManualLog({
+        type: LogType.email,
+        data: {
+          message:
+            type === 'login_notification'
+              ? 'send_login_notification'
+              : 'send_email',
+          email,
+          status: 'failed',
+        },
+      });
+      throw error;
+    }
+  }
+
+  /** Generate content of the confirmation email. */
   constructMailText(code: string) {
     return `با سلام
     کد تایید ایمیل شما :
@@ -84,10 +123,18 @@ export class EmailService {
     
     `;
   }
+
+  /** Generate content of a successful sign-in notification. */
+  constructLoginNotificationText() {
+    return `با سلام
+ورود موفقی به حساب کاربری شما انجام شد.
+اگر این ورود توسط شما انجام نشده است، لطفاً رمز عبور یا روش ورود خود را امن کنید.`;
+  }
 }
 
 interface EmailSendQueueType {
+  type?: 'confirmation' | 'login_notification';
   email: string;
-  code: string;
+  code?: string;
   status: 'pending' | 'success' | 'failed';
 }
