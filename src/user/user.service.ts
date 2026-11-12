@@ -21,7 +21,7 @@ export class UserService {
     const randomNumber = generateRandomNumber(5);
 
     //save random string in in memory db
-    this.redisService.setSmsCode(randomNumber, requestLoginDto.email);
+    await this.redisService.setSmsCode(randomNumber, requestLoginDto.email);
 
     //send email to user according to given email
     await this.emailService.addConfirmationEmailToQueue({
@@ -62,7 +62,7 @@ export class UserService {
 
     const refreshToken = this.authService.constructJwt({
       ver: 1,
-      typ: 'access',
+      typ: 'refresh',
       lnm: user.lastName,
       fnm: user.firstName,
       eml: user.email,
@@ -116,7 +116,7 @@ export class UserService {
 
     const refreshToken = this.authService.constructJwt({
       ver: 1,
-      typ: 'access',
+      typ: 'refresh',
       lnm: updatedUser.lastName,
       fnm: updatedUser.firstName,
       eml: user.email,

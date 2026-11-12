@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document, SchemaTypes } from 'mongoose';
+import { Document, SchemaTypes } from 'mongoose';
 
 export type LogDocument = Log & Document;
 export enum LogType {

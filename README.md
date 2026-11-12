@@ -51,6 +51,8 @@ The app emails a one-time verification code when `POST /user/requestLogin` is ca
 
 ## Test
 
+The Jest suite contains unit tests for authentication, user and email flows, Redis/log persistence adapters, request DTO validation, and shared HTTP utilities. Run it with `npm test`; use `npm run test:cov` to generate a coverage report.
+
 ```bash
 # unit tests
 $ npm run test
